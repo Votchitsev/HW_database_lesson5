@@ -1,5 +1,5 @@
 import sqlalchemy
-from pprint import pprint
+
 
 engine = sqlalchemy.create_engine('postgresql://votchitsev:55555@localhost:5432/Music_Platform')
 connection = engine.connect()
@@ -56,3 +56,58 @@ select_five = connection.execute("""
             WHERE ar.name = 'Nirvana'
             GROUP BY c.name""").fetchall()
 print('Запрос № 5 - ', select_five)
+
+# Запрос № 6 "Название альбомов, в которых присутствуют исполнители более 1 жанра"
+#
+# connection.execute("""
+#             INSERT INTO artistgenre(artist_id, genre_id)
+#             VALUES(2, 5);
+#             """)
+
+select_six = connection.execute("""
+            SELECT a.album_title FROM album a
+            JOIN artistalbum aa ON aa.album_id = a.id
+            JOIN artist ar ON aa.artist_id = ar.id
+            JOIN artistgenre ag ON ar.id = ag.artist_id
+            JOIN genre g ON ag.genre_id = g.id
+            GROUP BY a.album_title
+            HAVING COUNT(g.id) > 1
+            """).fetchall()
+print('Запрос № 6 - ', select_six)
+
+# Запрос № 7 "Наименование треков, которые не входят в сборники"
+
+select_seven = connection.execute("""
+            SELECT t.track_title FROM track t
+            WHERE t.id NOT IN (
+                SELECT t.id FROM track t
+                JOIN trackcollection tc ON t.id = tc.track_id
+                JOIN collection c ON tc.collection_id = c.collection_id
+                GROUP BY t.id)""").fetchall()
+print('Запрос № 7 - ', select_seven)
+
+# Запрос № 8 "исполнителя(-ей), написавшего самый короткий по продолжительности трек
+#             (теоретически таких треков может быть несколько)"
+
+select_eight = connection.execute("""
+            SELECT a.name FROM artist a
+            JOIN artistalbum aa ON a.id = aa.artist_id
+            JOIN album al ON aa.album_id = al.id
+            JOIN track t ON al.id = t.albumid
+            WHERE t.len = (SELECT min(t.len) FROM track t)
+            """).fetchall()
+print('Запрос № 8 - ', select_eight)
+
+# Запрос № 9 "Название альбомов, содержащих наименьшее количество треков."
+
+select_nine = connection.execute("""
+            SELECT a.album_title FROM album a
+            WHERE a.id = (
+                SELECT album.id FROM track
+                JOIN album ON track.albumid = album.id
+                GROUP BY album.id
+                ORDER BY COUNT(track.albumid) ASC
+                LIMIT 1
+                )
+            """).fetchall()
+print('Запрос № 9 - ', select_nine)
