@@ -58,11 +58,6 @@ select_five = connection.execute("""
 print('Запрос № 5 - ', select_five)
 
 # Запрос № 6 "Название альбомов, в которых присутствуют исполнители более 1 жанра"
-#
-# connection.execute("""
-#             INSERT INTO artistgenre(artist_id, genre_id)
-#             VALUES(2, 5);
-#             """)
 
 select_six = connection.execute("""
             SELECT a.album_title FROM album a
